@@ -17,7 +17,7 @@ handler = RotatingFileHandler(
     'homework.log',
     maxBytes=500000,
     backupCount=5,
-    mode='w'
+    encoding='utf-8'
 )
 
 # handler = logging.StreamHandler()
@@ -33,12 +33,14 @@ PRACTICUM_TOKEN = os.getenv('TOKEN_YA')
 TELEGRAM_TOKEN = os.getenv('TOKEN_BOT')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-RETRY_TIME = 600
-ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
-HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
+PRACTICUM_RETRY_TIME = 600
+PRACTICUM_ENDPOINT = (
+    'https://practicum.yandex.ru/api/user_api/homework_statuses/'
+)
+PRACTICUM_HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 
-HOMEWORK_STATUSES = {
+PRACTICUM_HOMEWORK_STATUSES = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
@@ -68,26 +70,32 @@ def get_api_answer(timestamp):
     logger.debug('get_api_answer(): start')
     params = {'from_date': timestamp}
     logger.debug(params)
-    response = requests.get(
-        ENDPOINT,
-        headers=HEADERS,
-        params=params
-    )
-    logger.debug(response)
-    code = str(response.status_code)
-    logger.debug(
-        f'timestamp - {timestamp}, - {dt_dt.fromtimestamp(timestamp)} '
-        f'response status code {code} '
-    )
-
-    if response.status_code != 200:
-        message = (
-            f'timestamp - {timestamp}, '
+    try:
+        response = requests.get(
+            PRACTICUM_ENDPOINT,
+            headers=PRACTICUM_HEADERS,
+            params=params
+        )
+        logger.debug(response)
+        code = str(response.status_code)
+        logger.debug(
+            f'timestamp - {timestamp}, - {dt_dt.fromtimestamp(timestamp)} '
             f'response status code {code} '
         )
+
+        if response.status_code != 200:
+            message = (
+                f'timestamp - {timestamp}, '
+                f'response status code {code} '
+            )
+            logger.error(message)
+            raise APIAnswerInvalidException(message)
+        return response.json()
+
+    except Exception as error:
+        message = f"API_error: {error}"
         logger.error(message)
         raise APIAnswerInvalidException(message)
-    return response.json()
 
 
 def check_response(response):
@@ -142,7 +150,7 @@ def parse_status(homework):
         logger.error(message)
         raise APIAnsverWrongData(message)
 
-    verdict = HOMEWORK_STATUSES.get(homework_status)
+    verdict = PRACTICUM_HOMEWORK_STATUSES.get(homework_status)
     logger.debug(verdict)
 
     if verdict is None:
@@ -222,7 +230,7 @@ def main():
         # запрашивать будем за последние сутки
         current_timestamp = start_while - 60 * 60 * 24
         end_while = int(time.time())
-        time.sleep(RETRY_TIME - (end_while - start_while))
+        time.sleep(PRACTICUM_RETRY_TIME - (end_while - start_while))
         logger.debug(f'while end - {int(time.time())}')
 
 
