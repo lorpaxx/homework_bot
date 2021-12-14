@@ -31,7 +31,7 @@ PRACTICUM_TOKEN = os.getenv('TOKEN_YA')
 TELEGRAM_TOKEN = os.getenv('TOKEN_BOT')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-PRACTICUM_RETRY_TIME = 60
+PRACTICUM_RETRY_TIME = 600
 PRACTICUM_ENDPOINT = (
     'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 )
@@ -247,6 +247,6 @@ def main():
 
 
 if __name__ == '__main__':
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     logger.info('=======START=======')
     main()
