@@ -18,7 +18,6 @@ handler = RotatingFileHandler(
     backupCount=5,
     encoding='utf-8'
 )
-# handler = logging.StreamHandler()
 logger.addHandler(handler)
 formatter = logging.Formatter(
     '[%(asctime)s]-[%(name)s]-[%(levelname)s]-%(message)s'
@@ -35,8 +34,8 @@ PRACTICUM_RETRY_TIME = 600
 PRACTICUM_ENDPOINT = (
     'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 )
-PRACTICUM_HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
+PRACTICUM_HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 HOMEWORK_STATUSES = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
@@ -62,14 +61,11 @@ def send_message(bot, message):
 def send_messages(bot, messages: set, homework_messages: set):
     """Отправка сообщений, что получились при очередном цикле while."""
     logger.debug('send_messages(): start')
-    for message in messages.copy():
-        try:
-            send_message(bot, message)
-            logger.debug('сообщение отправлено')
-            homework_messages.add(message)
-            logger.debug('сообщение сохранено')
-        except Exception as error:
-            logger.error(error)
+    for message in messages:
+        send_message(bot, message)
+        logger.debug('сообщение отправлено')
+        homework_messages.add(message)
+        logger.debug('сообщение сохранено')
 
 
 def get_api_answer(timestamp):
@@ -102,6 +98,11 @@ def get_api_answer(timestamp):
             raise APIAnswerInvalidException(message)
 
         return response.json()
+
+    except requests.RequestException as error:
+        message = f"RequestException: {error}"
+        logger.error(message)
+        raise APIAnswerInvalidException(message)
 
     except Exception as error:
         message = f"API_error: {error}"
@@ -247,6 +248,6 @@ def main():
 
 
 if __name__ == '__main__':
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     logger.info('=======START=======')
     main()
