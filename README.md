@@ -38,9 +38,11 @@ python3 -m pip install --upgrade pip
 ```
 pip install -r requirements.txt
 ```
+### Заполнит файл .env по аналогии с .env.example
+
 ### Запустить бота
 ```
-python homework.py.py
+python homework.py
 ```
  ## Авторы
  *Александр Бебякин*
